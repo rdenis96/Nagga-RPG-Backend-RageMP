@@ -1,0 +1,5 @@
+<meta>
+    <info name="Mines" description="Test resource to play around with mines" />
+
+    <script src="bin\x64\Debug\netcoreapp3.1\NaggaServer.dll" />
+</meta>
