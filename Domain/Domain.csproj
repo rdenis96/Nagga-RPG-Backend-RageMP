@@ -6,12 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
-    <ProjectReference Include="..\CompositionRoot\CompositionRoot.csproj" />
-    <ProjectReference Include="..\Helper\Helper.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="Bootstrapper">
       <HintPath>..\..\runtime\Bootstrapper.dll</HintPath>
     </Reference>
