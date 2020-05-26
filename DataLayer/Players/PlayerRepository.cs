@@ -1,5 +1,8 @@
 ﻿using DataLayer.EntityContexts;
+using DataLayer.Factions;
+using Domain.Models.Factions;
 using Domain.Models.Players;
+using Domain.Repositories.Factions;
 using Domain.Repositories.Players;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -9,50 +12,18 @@ namespace DataLayer.Repositories.Players
 {
     public class PlayerRepository : IPlayerRepository
     {
+        private readonly IFactionInfoRepository _factionInfoRepository;
+        public PlayerRepository()
+        {
+            _factionInfoRepository = new FactionInfoRepository();
+        }
         public PlayerInfoWrapper GetWrapperByUsername(string username)
         {
             using (var context = new MysqlContext())
             {
-                var result = context.PlayersInfos.Where(x => x.Username == username).FirstOrDefault();
+                var result = context.PlayersInfos.Where(x => x.Username == username).Include(x => x.Faction).FirstOrDefault();
                 return result;
             }
-            //PlayerInfo player = new PlayerInfo
-            //{
-            //    Admin = new AdminInfo
-            //    {
-            //        AdminLevel = AdminLevels.Owner,
-            //        ChatColor = "#000000"
-            //    },
-            //    Armor = 100,
-            //    Health = 100,
-            //    Money = 10000000,
-            //    BankMoney = 100000000,
-            //    Faction = new FactionInfo
-            //    {
-            //        FactionId = Factions.FBI,
-            //        ChatColor = "#dsfdsf",
-            //        IsMuted = false,
-            //        MuteEndDate = DateTime.MinValue,
-            //        Rank = 6,
-            //        Warns = 0
-            //    },
-            //    IdCard = new IdentityCard
-            //    {
-            //        BirthDate = new DateTime(1996, 11, 05),
-            //        RealName = "Radu Denis",
-            //        Sex = Gender.Male
-            //    },
-            //    IsLogged = true,
-            //    Licenses = LicensesTypes.Driving | LicensesTypes.Flying | LicensesTypes.Sailing | LicensesTypes.Weapons,
-            //    Name = "DFR",
-            //    Password = "pass",
-            //    PhoneNumber = 7273,
-            //    PositionWrapper = new Vector3Wrapper(200, 200, 200),
-            //    RotationWrapper = new Vector3Wrapper(200, 200, 200),
-            //    Skin = new Skin(),
-            //    SkinId = 2,
-            //    TimePlayed = 200000
-            //};
         }
 
         public bool ExistsPlayer(string username)
@@ -64,11 +35,11 @@ namespace DataLayer.Repositories.Players
             }
         }
 
-        public PlayerInfo GetByUsernameAndPassword(string username, string password)
+        public PlayerInfoWrapper GetByUsernameAndPassword(string username, string password)
         {
             using (var context = new MysqlContext())
             {
-                var result = context.PlayersInfos.Where(x => x.Username == username && x.Password == password).FirstOrDefault();
+                var result = context.PlayersInfos.Where(x => x.Username.Equals(username) && x.Password.Equals(password)).Include(x => x.Faction).FirstOrDefault();
                 return result;
             }
         }
@@ -79,6 +50,9 @@ namespace DataLayer.Repositories.Players
             {
                 context.PlayersInfos.Add(entity);
                 context.SaveChanges();
+
+                _factionInfoRepository.Create(entity.Id);
+                SetCivilFactionForPlayer(entity);
             }
         }
 
@@ -120,6 +94,13 @@ namespace DataLayer.Repositories.Players
                 var result = context.PlayersInfos.Find(id);
                 return result;
             }
+        }
+
+        private void SetCivilFactionForPlayer(PlayerInfoWrapper player)
+        {
+            FactionInfo factionInfo = _factionInfoRepository.GetByMemberId(player.Id);
+            player.FactionInfoId = factionInfo.Id;
+            Update(player);
         }
     }
 }

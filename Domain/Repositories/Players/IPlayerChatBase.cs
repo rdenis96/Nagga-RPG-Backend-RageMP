@@ -1,12 +1,11 @@
 ﻿using System;
 
-namespace Domain.Models.Interfaces
+namespace Domain.Repositories.Players
 {
     public interface IPlayerChatBase
     {
         DateTime MuteEndDate { get; set; }
         bool IsMuted { get; set; }
-        string ChatColor { get; set; }
 
     }
 }

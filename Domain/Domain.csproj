@@ -5,10 +5,8 @@
     <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Reference Include="Bootstrapper">
-      <HintPath>..\..\runtime\Bootstrapper.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutputPath></OutputPath>
+  </PropertyGroup>
 
 </Project>

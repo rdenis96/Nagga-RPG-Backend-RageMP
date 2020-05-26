@@ -1,5 +1,4 @@
-﻿using Domain.Models.Interfaces;
-using Domain.Models.Players;
+﻿using Domain.Models.Players;
 
 namespace Domain.Repositories.Players
 {
@@ -7,6 +6,6 @@ namespace Domain.Repositories.Players
     {
         PlayerInfoWrapper GetWrapperByUsername(string username);
         bool ExistsPlayer(string username);
-        PlayerInfo GetByUsernameAndPassword(string username, string password);
+        PlayerInfoWrapper GetByUsernameAndPassword(string username, string password);
     }
 }

@@ -5,8 +5,20 @@
     <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\DataLayer\DataLayer.csproj" />
+    <ProjectReference Include="..\Domain\Domain.csproj" />
+    <ProjectReference Include="..\Helper\Helper.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Bootstrapper">
+      <HintPath>..\..\runtime\Bootstrapper.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
