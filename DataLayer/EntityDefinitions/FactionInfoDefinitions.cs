@@ -1,5 +1,4 @@
-﻿using Domain.Enums.Factions;
-using Domain.Models.Factions;
+﻿using Domain.Models.Factions;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataLayer.EntityDefinitions
@@ -11,7 +10,7 @@ namespace DataLayer.EntityDefinitions
             modelBuilder.Entity<FactionInfo>().ToTable("factioninfos");
 
             modelBuilder.Entity<FactionInfo>().HasKey(p => p.Id);
-            modelBuilder.Entity<FactionInfo>().Property(p => p.FactionId).IsRequired().HasDefaultValue(FactionType.None);
+            modelBuilder.Entity<FactionInfo>().Property(p => p.FactionId).IsRequired();
             modelBuilder.Entity<FactionInfo>().Property(p => p.MemberId).IsRequired();
             modelBuilder.Entity<FactionInfo>().Property(p => p.SkinId).IsRequired();
             modelBuilder.Entity<FactionInfo>().Property(p => p.Rank).IsRequired();

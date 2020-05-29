@@ -129,6 +129,23 @@ namespace NaggaServer.Controllers
             }
         }
 
+        [Command(Commands.Fly, Alias = Commands.FlyAlias)]
+        public void Fly(Player player)
+        {
+            var canGetValue = RealtimeHelper.OnlinePlayers.TryGetValue(player.Id, out var playerInfo);
+            if (canGetValue)
+            {
+                if (playerInfo.Admin.AdminLevel > Domain.Enums.Admins.AdminLevels.None)
+                {
+                    player.TriggerEvent("activateNoClip");
+                }
+                else
+                {
+                    player.SendChatMessage(AdminMessages.CommandNotAuthorized);
+                }
+            }
+        }
+
     }
 }
 

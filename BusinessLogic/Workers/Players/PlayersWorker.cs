@@ -58,6 +58,8 @@ namespace BusinessLogic.Workers.Players
                 Email = email,
                 RegisterDate = currentDate,
                 LastActiveDate = DateTime.MinValue,
+                Level = 1,
+                RespectPoints = 0,
                 SkinId = 0,
                 Health = 100,
                 Armor = 100,

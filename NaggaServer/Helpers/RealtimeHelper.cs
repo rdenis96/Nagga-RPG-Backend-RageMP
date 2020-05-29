@@ -53,13 +53,25 @@ namespace NaggaServer.Helpers
             }
         }
 
+        public static Player GetOnlinePlayer(int playerId)
+        {
+            var player = OnlinePlayersClient.FirstOrDefault(x => x.Id == playerId);
+            return player;
+        }
+
+        public static PlayerInfoWrapper GetOnlinePlayerInfo(int playerId)
+        {
+            var player = OnlinePlayers.FirstOrDefault(x => x.Key == playerId);
+            return player.Value;
+        }
+
         public static void ExecuteActionOnPlayer(Player player, string target, Action<Player> func)
         {
             var isTargetOnline = false;
-            var isTargetId = Int32.TryParse(target, out int targetId);
+            var isTargetId = int.TryParse(target, out int targetId);
             if (isTargetId)
             {
-                isTargetOnline = RealtimeHelper.OnlinePlayers.ContainsKey(targetId);
+                isTargetOnline = OnlinePlayers.ContainsKey(targetId);
             }
             else
             {

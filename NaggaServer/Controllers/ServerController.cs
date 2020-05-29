@@ -15,6 +15,7 @@ namespace NaggaServer.Controllers
         public void OnServerResourceStart()
         {
             NAPI.Server.SetAutoSpawnOnConnect(false);
+            NAPI.Server.SetAutoRespawnAfterDeath(true);
         }
 
     }

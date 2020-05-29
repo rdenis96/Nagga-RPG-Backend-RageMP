@@ -11,6 +11,8 @@ namespace Domain.Models.Players
 {
 	public class PlayerInfoWrapper : PlayerInfo, IEquatable<PlayerInfoWrapper>
 	{
+		public int Level { get; set; }
+		public int RespectPoints { get; set; }
 		public SkinType SelectedSkin { get; set; }
 		public int SkinId { get; set; }
 		public Skin Skin { get; set; }
@@ -38,6 +40,8 @@ namespace Domain.Models.Players
 		{
 			return other != null &&
 				   base.Equals(other) &&
+				   Level == other.Level &&
+				   RespectPoints == other.RespectPoints &&
 				   SelectedSkin == other.SelectedSkin &&
 				   SkinId == other.SkinId &&
 				   EqualityComparer<Skin>.Default.Equals(Skin, other.Skin) &&
@@ -57,6 +61,8 @@ namespace Domain.Models.Players
 		{
 			HashCode hash = new HashCode();
 			hash.Add(base.GetHashCode());
+			hash.Add(Level);
+			hash.Add(RespectPoints);
 			hash.Add(SelectedSkin);
 			hash.Add(SkinId);
 			hash.Add(Skin);
