@@ -11,6 +11,10 @@
     <OutputPath>D:\Games\RAGEMP\server-files\dotnet\resources\NaggaServer\bin\x64\Debug\</OutputPath>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutputPath>D:\Games\RAGEMP\server-files\dotnet\resources\NaggaServer\bin\x64\Release\</OutputPath>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.4" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="3.1.1" />

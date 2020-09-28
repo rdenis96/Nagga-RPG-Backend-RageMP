@@ -3,6 +3,7 @@ using Domain.Enums.Admins;
 using Domain.Enums.Licenses;
 using Domain.Enums.Players;
 using Domain.Models.Admins;
+using Domain.Models.Common;
 using Domain.Models.Players;
 using Domain.Repositories.Players;
 using Helper.Locations;
@@ -60,6 +61,7 @@ namespace BusinessLogic.Workers.Players
                 LastActiveDate = DateTime.MinValue,
                 Level = 1,
                 RespectPoints = 0,
+                SelectedSkin = Domain.Enums.Characters.SkinType.Personal,
                 SkinId = 0,
                 Health = 100,
                 Armor = 100,
@@ -78,6 +80,12 @@ namespace BusinessLogic.Workers.Players
                 {
                     AdminLevel = AdminLevels.None,
                     ChatColor = "#FFFFFF"
+                },
+                Mute = new Mute
+                {
+                    IsMuted = false,
+                    ExpirationTime = DateTime.UtcNow,
+                    Reason = string.Empty
                 },
                 FactionInfoId = 0,
                 Licenses = LicensesTypes.All,

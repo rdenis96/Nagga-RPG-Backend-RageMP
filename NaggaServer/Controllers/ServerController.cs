@@ -16,6 +16,7 @@ namespace NaggaServer.Controllers
         {
             NAPI.Server.SetAutoSpawnOnConnect(false);
             NAPI.Server.SetAutoRespawnAfterDeath(true);
+            NAPI.Server.SetGlobalServerChat(false);
         }
 
     }

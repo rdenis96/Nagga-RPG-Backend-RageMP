@@ -4,6 +4,7 @@
     {
         public string Name { get; set; }
         public string Faction { get; set; }
+        public string FactionColor { get; set; }
         public string NameTag { get; set; }
         public int Age { get; set; }
         public string Sex { get; set; }

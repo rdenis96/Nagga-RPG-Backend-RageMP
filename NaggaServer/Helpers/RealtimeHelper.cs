@@ -1,71 +1,121 @@
-﻿using Domain.Models.Players;
+﻿using BusinessLogic.Workers.Players;
+using Domain.Models.Players;
 using GTANetworkAPI;
 using NaggaServer.Controllers;
+using NaggaServer.Models.Delegates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Timers;
 
 namespace NaggaServer.Helpers
 {
     public class RealtimeHelper
     {
-        private static RealtimeHelper instance;
-        private static object syncRoot = new object();
+        private static OnPlayerInfoUpdate _playerInfoUpdate;
+        private static OnPlayerSignedIn _playerSignedIn;
+        private static OnPlayerSignedOut _playerSignedOut;
+        private readonly PlayersWorker _playersWorker;
+        private static RealtimeHelper _instance;
+        private static object _syncRoot = new object();
+
+        public Dictionary<int, PlayerInfoWrapper> OnlinePlayers;
+        public Dictionary<int, PlayerInfoWrapper> OnlineAdmins;
+
+        public Dictionary<int, Timer> PlayersPlayedTimeTimers { get; set; }
 
 
-        public static Dictionary<int, PlayerInfoWrapper> OnlinePlayers;
-        public static Dictionary<int, PlayerInfoWrapper> OnlineAdmins;
+        public static event OnPlayerInfoUpdate PlayerInfoUpdate
+        {
+            add { PlayerController.PlayerInfoUpdate += value; }
+            remove { PlayerController.PlayerInfoUpdate -= value; }
+        }
 
-        public static List<Player> OnlinePlayersClient { get; set; }
-        public static List<Player> OnlineAdminsClient { get; set; }
+        public static event OnPlayerSignedIn PlayerSignedIn
+        {
+            add { PlayerController.PlayerSignedIn += value; }
+            remove { PlayerController.PlayerSignedIn -= value; }
+        }
+
+        public static event OnPlayerSignedOut PlayerSignedOut
+        {
+            add { PlayerController.PlayerSignedOut += value; }
+            remove { PlayerController.PlayerSignedOut -= value; }
+        }
 
         private RealtimeHelper()
         {
+            PlayerInfoUpdate += UpdatePlayerInfo;
+            PlayerSignedIn += OnPlayerSignedIn;
+            PlayerSignedOut += OnPlayerSignedOut;
+
+            _playersWorker = new PlayersWorker();
             OnlinePlayers = new Dictionary<int, PlayerInfoWrapper>();
             OnlineAdmins = new Dictionary<int, PlayerInfoWrapper>();
 
-            OnlinePlayersClient = new List<Player>();
-            OnlineAdminsClient = new List<Player>();
-
-            PlayerController.PlayerSignedIn += OnPlayerSignedIn;
-            PlayerController.PlayerSignedOut += OnPlayerSignedOut;
+            PlayersPlayedTimeTimers = new Dictionary<int, Timer>();
         }
 
         public static RealtimeHelper Instance
         {
             get
             {
-                if (instance == null)
+                if (_instance == null)
                 {
-                    lock (syncRoot)
+                    lock (_syncRoot)
                     {
-                        if (instance == null)
+                        if (_instance == null)
                         {
                             var temp = new RealtimeHelper();
 
                             System.Threading.Thread.MemoryBarrier();
-                            instance = temp;
+                            _instance = temp;
                         }
                     }
                 }
 
-                return instance;
+                return _instance;
             }
         }
 
-        public static Player GetOnlinePlayer(int playerId)
+        public static List<Player> GetAllPlayers(Func<Player, bool> filter = null)
         {
-            var player = OnlinePlayersClient.FirstOrDefault(x => x.Id == playerId);
+            var result = NAPI.Pools.GetAllPlayers();
+            if (filter != null)
+            {
+                result = result.Where(filter).ToList();
+            }
+            return result;
+        }
+
+        public List<Player> GetAllOnlineClientAdmins()
+        {
+            var onlineAdmins = new List<Player>();
+
+            NAPI.Pools.GetAllPlayers().ForEach(player =>
+            {
+                var playerInfo = GetOnlinePlayerInfo(player.Id);
+                if (playerInfo != null && playerInfo.Admin.AdminLevel > 0)
+                {
+                    onlineAdmins.Add(player);
+                }
+            });
+            return onlineAdmins;
+        }
+
+        public Player GetPlayerById(int playerId)
+        {
+            var player = GetAllPlayers().FirstOrDefault(x => x.Id == playerId);
             return player;
         }
 
-        public static PlayerInfoWrapper GetOnlinePlayerInfo(int playerId)
+        public PlayerInfoWrapper GetOnlinePlayerInfo(int playerId)
         {
             var player = OnlinePlayers.FirstOrDefault(x => x.Key == playerId);
             return player.Value;
         }
 
-        public static void ExecuteActionOnPlayer(Player player, string target, Action<Player> func)
+        public void ExecuteActionOnPlayer(Player player, string target, Action<Player, PlayerInfoWrapper> func)
         {
             var isTargetOnline = false;
             var isTargetId = int.TryParse(target, out int targetId);
@@ -75,15 +125,16 @@ namespace NaggaServer.Helpers
             }
             else
             {
-                isTargetOnline = NAPI.Pools.GetAllPlayers().Any(x => x.Name.Equals(target));
+                isTargetOnline = GetAllPlayers().Any(x => x.Name.Equals(target));
             }
 
             if (isTargetOnline)
             {
-                var targetModel = isTargetId ? NAPI.Pools.GetAllPlayers().FirstOrDefault(x => x.Id == targetId) : NAPI.Pools.GetAllPlayers().FirstOrDefault(x => x.Name == target);
+                var targetModel = isTargetId ? GetAllPlayers().FirstOrDefault(x => x.Id == targetId) : GetAllPlayers().FirstOrDefault(x => x.Name == target);
                 if (targetModel != null)
                 {
-                    func(targetModel);
+                    var targetInfoModel = OnlinePlayers.FirstOrDefault(x => x.Key == targetModel.Id).Value;
+                    func(targetModel, targetInfoModel);
                 }
             }
             else
@@ -92,26 +143,37 @@ namespace NaggaServer.Helpers
             }
         }
 
-        private static void OnPlayerSignedIn(Player player, PlayerInfoWrapper dbPlayer)
+        public void ExecuteActionOnSelf(Player player, Action<PlayerInfoWrapper> func)
+        {
+            var playerInfo = OnlinePlayers.FirstOrDefault(x => x.Key == player.Id).Value;
+            if (playerInfo != null)
+            {
+                func(playerInfo);
+            }
+        }
+
+        public void OnPlayerSignedIn(Player player, PlayerInfoWrapper dbPlayer)
         {
             OnlinePlayers.Add(player.Id, dbPlayer);
-            OnlinePlayersClient.Add(player);
 
             if (dbPlayer.Admin.AdminLevel > Domain.Enums.Admins.AdminLevels.None)
             {
                 OnlineAdmins.Add(player.Id, dbPlayer);
-                OnlineAdminsClient.Add(player);
             }
+
+            StartPlayedTimeCounting(dbPlayer);
+
+            var positionToSpawn = new Vector3(dbPlayer.PositionWrapper.X, dbPlayer.PositionWrapper.Y, dbPlayer.PositionWrapper.Z);
+            NAPI.Player.SpawnPlayer(player, positionToSpawn);
         }
 
-        private static void OnPlayerSignedOut(Player player)
+        public void OnPlayerSignedOut(Player player)
         {
+            var playerInfo = OnlinePlayers.FirstOrDefault(x => x.Key == player.Id).Value;
+            StopPlayedTimeCounting(playerInfo.Id);
+            _playersWorker.Update(playerInfo);
+
             OnlinePlayers.Remove(player.Id);
-            var playerToRemove = OnlinePlayersClient.FirstOrDefault(x => x.Id == player.Id);
-            if (playerToRemove != null)
-            {
-                OnlinePlayersClient.Remove(playerToRemove);
-            }
 
             var playerPair = OnlineAdmins.FirstOrDefault(x => x.Key == player.Id);
             if (playerPair.Value != null)
@@ -120,13 +182,35 @@ namespace NaggaServer.Helpers
                 if (dbPlayer.Admin.AdminLevel > Domain.Enums.Admins.AdminLevels.None)
                 {
                     OnlineAdmins.Remove(player.Id);
-                    var adminToRemove = OnlineAdminsClient.FirstOrDefault(x => x.Id == player.Id);
-                    if (adminToRemove != null)
-                    {
-                        OnlineAdminsClient.Remove(adminToRemove);
-                    }
                 }
             }
+        }
+
+        private void StartPlayedTimeCounting(PlayerInfoWrapper player)
+        {
+            Timer timer = new Timer();
+            PlayersPlayedTimeTimers.Add(player.Id, timer);
+
+            timer.Interval = 1000;
+            timer.Elapsed += (object source, ElapsedEventArgs e) =>
+            {
+                player.TimePlayed += 1000;
+            };
+            timer.Start();
+        }
+
+        private void StopPlayedTimeCounting(int playerInfoId)
+        {
+            bool canGetTimer = PlayersPlayedTimeTimers.TryGetValue(playerInfoId, out Timer timer);
+            if (canGetTimer)
+            {
+                timer.Stop();
+            }
+        }
+
+        private void UpdatePlayerInfo(PlayerInfoWrapper playerInfo)
+        {
+            _playersWorker.Update(playerInfo);
         }
     }
 }

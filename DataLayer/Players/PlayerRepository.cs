@@ -58,12 +58,13 @@ namespace DataLayer.Repositories.Players
 
         public PlayerInfoWrapper Update(PlayerInfoWrapper entity)
         {
+            bool changesSaved = false;
             using (var context = new MysqlContext())
             {
                 context.Entry(entity).State = EntityState.Modified;
-                context.SaveChanges();
-                return GetWrapperByUsername(entity.Username);
+                changesSaved = context.SaveChanges() > 0;
             }
+            return changesSaved ? entity : null;
         }
 
         public IEnumerable<PlayerInfoWrapper> GetAll()

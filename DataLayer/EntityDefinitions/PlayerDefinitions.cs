@@ -52,7 +52,13 @@ namespace DataLayer.EntityDefinitions
                    g.Property(p => p.AdminLevel).IsRequired();
                    g.Ignore(p => p.AdminName);
                });
-
+            modelBuilder.Entity<PlayerInfoWrapper>().OwnsOne(p => p.Mute,
+                g =>
+                {
+                    g.Property(p => p.IsMuted).IsRequired();
+                    g.Property(p => p.ExpirationTime).IsRequired();
+                    g.Property(p => p.Reason).IsRequired();
+                });
             modelBuilder.Entity<PlayerInfoWrapper>().HasOne(p => p.Faction).WithMany().HasForeignKey(p => p.FactionInfoId).IsRequired();
             modelBuilder.Entity<PlayerInfoWrapper>().Property(p => p.Licenses).IsRequired();
             modelBuilder.Entity<PlayerInfoWrapper>().Property(p => p.TimePlayed).IsRequired();

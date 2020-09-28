@@ -5,6 +5,7 @@
         None,
         Red,
         Orange,
-        Green
+        Green,
+        ChatAdmins
     }
 }

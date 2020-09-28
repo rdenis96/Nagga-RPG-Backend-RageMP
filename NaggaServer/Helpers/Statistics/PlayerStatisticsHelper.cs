@@ -1,6 +1,7 @@
 ﻿using Domain.Enums.Players;
 using Domain.Models.Players;
 using GTANetworkAPI;
+using Helper.Factions;
 using NaggaServer.Models.Players;
 using System;
 
@@ -16,12 +17,14 @@ namespace NaggaServer.Helpers.Statistics
             {
                 age--;
             }
+            var faction = FactionHelper.GetFactionById(playerInfo.Faction.FactionId);
 
             StatsViewModel stats = new StatsViewModel
             {
                 Name = player.Name,
-                Faction = "Grove Street",
-                NameTag = $"{player.Nametag}({player.Id})",
+                Faction = faction.Name,
+                FactionColor = faction.Color,
+                NameTag = $"{NAPI.Player.GetPlayerNametag(player)}({player.Id})",
                 Age = age,
                 BankMoney = $"{playerInfo.BankMoney}$",
                 Money = $"{playerInfo.Money}$",
