@@ -1,5 +1,4 @@
-﻿using DataLayer.Repositories.Players;
-using Domain.Enums.Admins;
+﻿using Domain.Enums.Admins;
 using Domain.Enums.Licenses;
 using Domain.Enums.Players;
 using Domain.Models.Admins;
@@ -14,9 +13,10 @@ namespace BusinessLogic.Workers.Players
     public class PlayersWorker
     {
         private readonly IPlayerRepository _playerRepository;
-        public PlayersWorker()
+
+        public PlayersWorker(IPlayerRepository playerRepository)
         {
-            _playerRepository = new PlayerRepository();
+            _playerRepository = playerRepository;
         }
 
         public bool ExistsPlayer(string username)
@@ -90,7 +90,6 @@ namespace BusinessLogic.Workers.Players
                 FactionInfoId = 0,
                 Licenses = LicensesTypes.All,
                 TimePlayed = 0
-
             };
             return playerInfo;
         }

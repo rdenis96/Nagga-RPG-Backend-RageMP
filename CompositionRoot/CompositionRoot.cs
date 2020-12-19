@@ -1,5 +1,8 @@
-﻿using BusinessLogic.Workers.Players;
+﻿using BusinessLogic.Workers.Factions;
+using BusinessLogic.Workers.Players;
+using DataLayer.Factions;
 using DataLayer.Repositories.Players;
+using Domain.Repositories.Factions;
 using Domain.Repositories.Players;
 using Ninject;
 
@@ -47,6 +50,10 @@ namespace Heimdal.Backend.CompositionRoot
             kernel.Bind<IPlayerRepository>().To<PlayerRepository>();
             kernel.Bind<PlayersWorker>().To<PlayersWorker>()
                 .WithConstructorArgument(GetImplementation<IPlayerRepository>());
+
+            kernel.Bind<IFactionInfoRepository>().To<FactionInfoRepository>();
+            kernel.Bind<FactionInfosWorker>().To<FactionInfosWorker>()
+                .WithConstructorArgument(GetImplementation<IFactionInfoRepository>());
         }
     }
 }

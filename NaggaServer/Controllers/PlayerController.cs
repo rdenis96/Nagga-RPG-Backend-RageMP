@@ -2,6 +2,7 @@
 using Domain.Enums.Characters;
 using Domain.Models.Players;
 using GTANetworkAPI;
+using Heimdal.Backend.CompositionRoot;
 using Helper;
 using Helper.Characters.Constants;
 using NaggaServer.Constants;
@@ -13,7 +14,6 @@ using NaggaServer.Models.Delegates;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,24 +21,34 @@ namespace NaggaServer.Controllers
 {
     public class PlayerController : Script
     {
+        private readonly CompositionRoot _compositionRoot;
         private readonly PlayersWorker _playersWorker;
         private readonly RealtimeHelper _realtimeHelper;
 
         public static event OnPlayerInfoUpdate PlayerInfoUpdate;
+
         public static event OnPlayerSignedIn PlayerSignedIn;
+
         public static event OnPlayerSignedOut PlayerSignedOut;
 
         public PlayerController()
         {
-            _playersWorker = new PlayersWorker();
+            _compositionRoot = CompositionRoot.Instance;
+            _playersWorker = _compositionRoot.GetImplementation<PlayersWorker>();
             _realtimeHelper = RealtimeHelper.Instance;
         }
 
         #region Commands
 
+        [Command(Commands.GetCoordonates, Alias = Commands.GetCoordonatesAlias)]
+        public async Task GetCoordonates(Player player)
+        {
+            player.SendChatMessage($"Coordonates: X : {player.Position.X} | Y : {player.Position.Y} | Z : {player.Position.Z}");
+        }
+
         [Command(Commands.Stats, Alias = Commands.StatsAlias)]
         [RemoteEvent("keypressStats")]
-        public void Stats(Player player)
+        public async Task Stats(Player player)
         {
             var playerInfo = _realtimeHelper.OnlinePlayers.GetValueOrDefault(player.Id);
             if (playerInfo != null)
@@ -50,36 +60,35 @@ namespace NaggaServer.Controllers
             {
                 player.SendChatMessage(ServerMessages.CommandError);
             }
-
         }
 
         #endregion Commands
 
-
         #region ServerEvents
 
         [ServerEvent(Event.PlayerConnected)]
-        public void OnPlayerConnected(Player player)
+        public async Task OnPlayerConnected(Player player)
         {
             NAPI.Entity.SetEntityTransparency(player, 0);
+            player.Dimension = (uint)(player.Id + 1);
             player.TriggerEvent("onPlayerConnected");
         }
 
         [ServerEvent(Event.PlayerDisconnected)]
-        public void OnPlayerDisconnected(Player player, DisconnectionType disconnectionType, string reason)
+        public async Task OnPlayerDisconnected(Player player, DisconnectionType disconnectionType, string reason)
         {
             SetPlayerInfoOnSignOut(player);
         }
 
         [ServerEvent(Event.PlayerSpawn)]
-        public void OnPlayerSpawn(Player player)
+        public async Task OnPlayerSpawn(Player player)
         {
             var dbPlayer = _playersWorker.GetWrapperByUsername(player.Name);
             SetPlayerInfoOnSpawn(player, dbPlayer);
         }
 
         [ServerEvent(Event.ChatMessage)]
-        public void OnPlayerSendChatMessage(Player player, string message)
+        public async Task OnPlayerSendChatMessage(Player player, string message)
         {
             var playerInfo = _realtimeHelper.GetOnlinePlayerInfo(player.Id);
             if (playerInfo.Mute.IsMuted == true)
@@ -90,7 +99,7 @@ namespace NaggaServer.Controllers
                 }
                 else
                 {
-                    Task.Run(() =>
+                    await Task.Run(() =>
                     {
                         playerInfo.Mute.IsMuted = false;
                         playerInfo.Mute.Reason = string.Empty;
@@ -110,10 +119,8 @@ namespace NaggaServer.Controllers
         #region RemoteEvent
 
         [RemoteEvent("OnPlayerLoginAttempt")]
-        public async void OnPlayerLoginAttempt(Player player, string loginViewModel)
+        public async Task OnPlayerLoginAttempt(Player player, string loginViewModel)
         {
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
             LoginViewModel loginModel = JsonConvert.DeserializeObject<LoginViewModel>(loginViewModel);
 
             var encryptedPass = EncryptHelper.ComputeSha512Hash(loginModel.Password);
@@ -132,12 +139,10 @@ namespace NaggaServer.Controllers
                 }
             }
             player.TriggerEvent("onPlayerLoginResponse", dbPlayer);
-            stopwatch.Stop();
-            Console.WriteLine(stopwatch.Elapsed.TotalSeconds);
         }
 
         [RemoteEvent("OnPlayerRegisterAttempt")]
-        public void OnPlayerRegisterAttempt(Player player, string registerViewModel)
+        public async Task OnPlayerRegisterAttempt(Player player, string registerViewModel)
         {
             RegisterViewModel registerModel = JsonConvert.DeserializeObject<RegisterViewModel>(registerViewModel);
             var existsPlayer = _playersWorker.ExistsPlayer(registerModel.Username);
@@ -156,7 +161,8 @@ namespace NaggaServer.Controllers
         #endregion RemoteEvent
 
         #region PrivateMethods
-        private async Task SetPlayerInfoOnSignIn(Player player, PlayerInfoWrapper dbPlayer)
+
+        private void SetPlayerInfoOnSignIn(Player player, PlayerInfoWrapper dbPlayer)
         {
             dbPlayer.LastActiveDate = DateTime.UtcNow;
             Interlocked.CompareExchange(ref PlayerSignedIn, null, null)?.Invoke(player, dbPlayer);
@@ -176,20 +182,19 @@ namespace NaggaServer.Controllers
                     case SkinType.Faction:
                         player.SetSkin((PedHash)dbPlayer.Faction.SkinId);
                         break;
+
                     case SkinType.Personal:
                         player.SetSkin(PredefinedSkins.CivilSkin);
                         break;
                 }
                 NAPI.Entity.SetEntityTransparency(player, 255);
             }
-
         }
 
         private void SetPlayerInfoOnSignOut(Player player)
         {
             Interlocked.CompareExchange(ref PlayerSignedOut, null, null)?.Invoke(player);
         }
-
 
         private void SendChatMessage(Player player, string message)
         {

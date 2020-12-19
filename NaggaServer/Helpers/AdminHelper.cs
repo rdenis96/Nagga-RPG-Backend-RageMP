@@ -1,7 +1,7 @@
 ﻿using Domain.Enums.Admins;
 using GTANetworkAPI;
-using Helper.Chat;
 using Helper.Chat.Enums;
+using Helper.Common;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -30,11 +30,12 @@ namespace NaggaServer.Helpers
                 admin.SendChatMessage(sender, message);
             });
         }
+
         public static void SendAdminCommandMessage(this Player player, Player target, string messageForAdmin, string messageForTarget, List<Player> adminsToReceive, string valueToDisplay = null)
         {
-            var playerColor = ChatHelper.GetChatColor(ChatColors.Orange);
-            var adminTagColor = ChatHelper.GetChatColor(ChatColors.Green);
-            var chatColor = ChatHelper.GetChatColor(ChatColors.None);
+            var playerColor = ChatColors.Orange.GetDescription();
+            var adminTagColor = ChatColors.Green.GetDescription();
+            var chatColor = ChatColors.None.GetDescription();
 
             var message = $"{adminTagColor}[ADMIN] {playerColor}{player.Name}({player.Id}) {chatColor}{messageForAdmin} {playerColor}{target.Name}({target.Id})";
             if (string.IsNullOrWhiteSpace(valueToDisplay) == false)
@@ -56,9 +57,9 @@ namespace NaggaServer.Helpers
 
         public static void SendPersonalAdminCommandMessage(this Player player, string message, List<Player> adminsToReceive, string valueToDisplay = null)
         {
-            var playerColor = ChatHelper.GetChatColor(ChatColors.Orange);
-            var adminTagColor = ChatHelper.GetChatColor(ChatColors.Green);
-            var chatColor = ChatHelper.GetChatColor(ChatColors.None);
+            var playerColor = ChatColors.Orange.GetDescription();
+            var adminTagColor = ChatColors.Green.GetDescription();
+            var chatColor = ChatColors.None.GetDescription();
 
             var messageToAdmin = $"{adminTagColor}[ADMIN] {playerColor}{player.Name}({player.Id}) {chatColor}{message}";
             if (string.IsNullOrWhiteSpace(valueToDisplay) == false)
@@ -79,8 +80,10 @@ namespace NaggaServer.Helpers
                 case AdminLevels.Owner:
                 case AdminLevels.Developer:
                     return $"{nameof(adminLevel)}";
+
                 case AdminLevels.SuperAdvanced:
                     return "Super Advanced";
+
                 default:
                     return string.Empty;
             }

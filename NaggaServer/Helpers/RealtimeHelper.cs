@@ -1,20 +1,20 @@
 ﻿using BusinessLogic.Workers.Players;
 using Domain.Models.Players;
 using GTANetworkAPI;
+using Heimdal.Backend.CompositionRoot;
 using NaggaServer.Controllers;
 using NaggaServer.Models.Delegates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Timers;
 
 namespace NaggaServer.Helpers
 {
     public class RealtimeHelper
     {
-        private static OnPlayerInfoUpdate _playerInfoUpdate;
-        private static OnPlayerSignedIn _playerSignedIn;
-        private static OnPlayerSignedOut _playerSignedOut;
+        private readonly CompositionRoot _compositionRoot;
         private readonly PlayersWorker _playersWorker;
         private static RealtimeHelper _instance;
         private static object _syncRoot = new object();
@@ -23,7 +23,6 @@ namespace NaggaServer.Helpers
         public Dictionary<int, PlayerInfoWrapper> OnlineAdmins;
 
         public Dictionary<int, Timer> PlayersPlayedTimeTimers { get; set; }
-
 
         public static event OnPlayerInfoUpdate PlayerInfoUpdate
         {
@@ -49,7 +48,9 @@ namespace NaggaServer.Helpers
             PlayerSignedIn += OnPlayerSignedIn;
             PlayerSignedOut += OnPlayerSignedOut;
 
-            _playersWorker = new PlayersWorker();
+            _compositionRoot = CompositionRoot.Instance;
+
+            _playersWorker = _compositionRoot.GetImplementation<PlayersWorker>();
             OnlinePlayers = new Dictionary<int, PlayerInfoWrapper>();
             OnlineAdmins = new Dictionary<int, PlayerInfoWrapper>();
 
@@ -115,7 +116,7 @@ namespace NaggaServer.Helpers
             return player.Value;
         }
 
-        public void ExecuteActionOnPlayer(Player player, string target, Action<Player, PlayerInfoWrapper> func)
+        public async Task ExecuteActionOnPlayer(Player player, string target, Action<Player, PlayerInfoWrapper> func)
         {
             var isTargetOnline = false;
             var isTargetId = int.TryParse(target, out int targetId);
@@ -143,7 +144,7 @@ namespace NaggaServer.Helpers
             }
         }
 
-        public void ExecuteActionOnSelf(Player player, Action<PlayerInfoWrapper> func)
+        public async Task ExecuteActionOnSelf(Player player, Action<PlayerInfoWrapper> func)
         {
             var playerInfo = OnlinePlayers.FirstOrDefault(x => x.Key == player.Id).Value;
             if (playerInfo != null)

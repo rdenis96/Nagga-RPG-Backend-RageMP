@@ -1,5 +1,5 @@
-﻿using Helper.Chat;
-using Helper.Chat.Enums;
+﻿using Helper.Chat.Enums;
+using Helper.Common;
 using System;
 
 namespace NaggaServer.Constants.Chat
@@ -16,7 +16,7 @@ namespace NaggaServer.Constants.Chat
 
         public const string CreateVehicle = " a creat vehicul pentru jucatorul ";
 
-        #endregion
+        #endregion Commands on players
 
         public const string Freeze = " l-a blocat pe loc pe jucatorul ";
         public const string UnFreeze = " l-a deblocat de pe loc pe jucatorul ";
@@ -31,27 +31,28 @@ namespace NaggaServer.Constants.Chat
 
         public const string GoToCoordonates = " s-a teleportat la coordonatele ";
 
-        #endregion
+        #endregion Commands on self
 
         #region Commands error messages
 
         public const string NotFreezed = "Jucatorul nu este blocat!";
 
-        #endregion
+        #endregion Commands error messages
+
         static AdminMessages()
         {
-            CommandNotAuthorized = $"{ChatHelper.GetChatColor(ChatColors.Red)}Nu esti autorizat sa accesezi aceasta comanda!";
+            CommandNotAuthorized = $"{ChatColors.Red.GetDescription()}Nu esti autorizat sa accesezi aceasta comanda!";
         }
 
         public static string Mute(string adminName, string playerName, string reason, DateTime expirationTime)
         {
-            return $@"{ChatHelper.GetChatColor(ChatColors.Orange)}Administratorul {adminName} 
-                                                {ChatHelper.GetChatColor(ChatColors.None)}i-a dat mute jucatorului 
-                                                {ChatHelper.GetChatColor(ChatColors.Orange)}{playerName} 
-                                                {ChatHelper.GetChatColor(ChatColors.None)}cu motivul 
-                                                {ChatHelper.GetChatColor(ChatColors.Orange)}{reason} 
-                                                {ChatHelper.GetChatColor(ChatColors.None)}pana la data de 
-                                                {ChatHelper.GetChatColor(ChatColors.Orange)} {expirationTime}!";
+            return $@"{ChatColors.Orange.GetDescription()}Administratorul {adminName}
+                                                {ChatColors.None.GetDescription()}i-a dat mute jucatorului
+                                                {ChatColors.Orange.GetDescription()}{playerName}
+                                                {ChatColors.None.GetDescription()}cu motivul
+                                                {ChatColors.Orange.GetDescription()}{reason}
+                                                {ChatColors.None.GetDescription()}pana la data de
+                                                {ChatColors.Orange.GetDescription()} {expirationTime}!";
         }
     }
 }

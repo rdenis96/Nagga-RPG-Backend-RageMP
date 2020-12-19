@@ -5,6 +5,9 @@
         public const string Stats = "stats";
         public const string StatsAlias = "Stats,sts";
 
+        public const string GetCoordonates = "getcoordonates";
+        public const string GetCoordonatesAlias = "getcoords,GetCoordonates,GetCoords,mycoordonates,MyCoordonates,mycoords,MyCoords";
+
         #region Admin 1 commands
 
         public const string AdminChat = "a";
@@ -43,17 +46,20 @@
         public const string Kick = "akick";
         public const string KickAlias = "AKick";
 
-        #endregion
+        #endregion Admin 1 commands
 
         #region Admin 2 commands
 
         public const string CreateVehicle = "createvehicle";
         public const string CreateVehicleAlias = "creatveh,CreateVehicle,CreateVeh";
-        #endregion
+
+        #endregion Admin 2 commands
 
         #region Admin 5 commands
+
         public const string MakeLeader = "makeleader";
         public const string MakeLeaderAlias = "setleader,MakeLeader,SetLeader";
-        #endregion
+
+        #endregion Admin 5 commands
     }
 }

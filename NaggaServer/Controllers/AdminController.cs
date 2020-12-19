@@ -1,19 +1,21 @@
 ﻿using Domain.Enums.Admins;
 using GTANetworkAPI;
-using Helper.Chat;
 using Helper.Chat.Enums;
+using Helper.Common;
 using NaggaServer.Constants;
 using NaggaServer.Constants.Chat;
 using NaggaServer.Helpers;
 using NaggaServer.Models.Delegates;
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NaggaServer.Controllers
 {
     public class AdminController : Script
     {
         private readonly RealtimeHelper _realtimeHelper;
+
         public event OnPlayerInfoUpdate PlayerInfoUpdate;
 
         public AdminController()
@@ -22,9 +24,9 @@ namespace NaggaServer.Controllers
         }
 
         [Command(Commands.GotoCoordonates, Alias = Commands.GotoCoordonatesAlias, GreedyArg = true)]
-        public void GotoCoordonates(Player player, string position)
+        public async Task GotoCoordonates(Player player, string position)
         {
-            _realtimeHelper.ExecuteActionOnSelf(player, (playerInfo) =>
+            await _realtimeHelper.ExecuteActionOnSelf(player, (playerInfo) =>
             {
                 if (playerInfo.Admin.AdminLevel > AdminLevels.None)
                 {
@@ -58,7 +60,7 @@ namespace NaggaServer.Controllers
         }
 
         [Command(Commands.SetTempSkin, Alias = Commands.SetTempSkinAlias)]
-        public void SetTempSkin(Player player, int val)
+        public async Task SetTempSkin(Player player, int val)
         {
             var canGetValue = _realtimeHelper.OnlinePlayers.TryGetValue(player.Id, out var playerInfo);
             if (canGetValue)
@@ -82,7 +84,7 @@ namespace NaggaServer.Controllers
         }
 
         [Command(Commands.SetHealth, Alias = Commands.SetHealthAlias)]
-        public void SetHealth(Player player, string target, int health)
+        public async Task SetHealth(Player player, string target, int health)
         {
             var canGetValue = _realtimeHelper.OnlinePlayers.TryGetValue(player.Id, out var playerInfo);
             if (canGetValue)
@@ -91,7 +93,7 @@ namespace NaggaServer.Controllers
                 {
                     if (playerInfo.Admin.AdminLevel > AdminLevels.None)
                     {
-                        _realtimeHelper.ExecuteActionOnPlayer(player, target, (targetPlayer, targetInfoPlayer) =>
+                        await _realtimeHelper.ExecuteActionOnPlayer(player, target, (targetPlayer, targetInfoPlayer) =>
                         {
                             targetPlayer.Health = health;
                             var onlineAdmins = _realtimeHelper.GetAllOnlineClientAdmins();
@@ -111,7 +113,7 @@ namespace NaggaServer.Controllers
         }
 
         [Command(Commands.SetArmor, Alias = Commands.SetArmorAlias)]
-        public void SetArmor(Player player, string target, int armor)
+        public async Task SetArmor(Player player, string target, int armor)
         {
             var canGetValue = _realtimeHelper.OnlinePlayers.TryGetValue(player.Id, out var playerInfo);
             if (canGetValue)
@@ -120,7 +122,7 @@ namespace NaggaServer.Controllers
                 {
                     if (playerInfo.Admin.AdminLevel > AdminLevels.None)
                     {
-                        _realtimeHelper.ExecuteActionOnPlayer(player, target, (targetPlayer, targetInfoPlayer) =>
+                        await _realtimeHelper.ExecuteActionOnPlayer(player, target, (targetPlayer, targetInfoPlayer) =>
                         {
                             targetPlayer.Armor = armor;
                             var onlineAdmins = _realtimeHelper.GetAllOnlineClientAdmins();
@@ -140,7 +142,7 @@ namespace NaggaServer.Controllers
         }
 
         [Command(Commands.Fly, Alias = Commands.FlyAlias)]
-        public void Fly(Player player)
+        public async Task Fly(Player player)
         {
             var canGetValue = _realtimeHelper.OnlinePlayers.TryGetValue(player.Id, out var playerInfo);
             if (canGetValue)
@@ -157,15 +159,15 @@ namespace NaggaServer.Controllers
         }
 
         [Command(Commands.AdminChat, Alias = Commands.AdminChatAlias, GreedyArg = true)]
-        public void AdminChat(Player player, string message)
+        public async Task AdminChat(Player player, string message)
         {
-            _realtimeHelper.ExecuteActionOnSelf(player, (playerInfo) =>
+            await _realtimeHelper.ExecuteActionOnSelf(player, (playerInfo) =>
             {
                 if (playerInfo.Admin.AdminLevel > AdminLevels.None)
                 {
-                    var adminMessage = $"{ChatHelper.GetChatColor(ChatColors.None)}{message}";
+                    var adminMessage = $"{ChatColors.None.GetDescription()}{message}";
                     var onlineAdmins = _realtimeHelper.GetAllOnlineClientAdmins();
-                    var sender = $"{ChatHelper.GetChatColor(ChatColors.ChatAdmins)}[{AdminHelper.GetAdminLevelForChat(playerInfo.Admin.AdminLevel)}] {player.Name}";
+                    var sender = $"{ChatColors.ChatAdmins.GetDescription()}[{AdminHelper.GetAdminLevelForChat(playerInfo.Admin.AdminLevel)}] {player.Name}";
                     AdminHelper.SendMessageToAdmins(adminMessage, onlineAdmins, sender);
                 }
                 else
@@ -176,14 +178,14 @@ namespace NaggaServer.Controllers
         }
 
         [Command(Commands.Freeze, Alias = Commands.FreezeAlias, Description = "/freeze <id/name>")]
-        public void Freeze(Player player, string target)
+        public async Task Freeze(Player player, string target)
         {
             try
             {
                 var playerInfo = _realtimeHelper.GetOnlinePlayerInfo(player.Id);
                 if (playerInfo != null && playerInfo.Admin.AdminLevel > AdminLevels.None)
                 {
-                    _realtimeHelper.ExecuteActionOnPlayer(player, target, (targetPlayer, targetPlayerInfo) =>
+                    await _realtimeHelper.ExecuteActionOnPlayer(player, target, (targetPlayer, targetPlayerInfo) =>
                     {
                         targetPlayer.SetData("isFreezed", true);
                         targetPlayer.TriggerEvent("freeze", true);
@@ -204,14 +206,14 @@ namespace NaggaServer.Controllers
         }
 
         [Command(Commands.UnFreeze, Alias = Commands.UnFreezeAlias, Description = "/unfreeze <id/name>")]
-        public void UnFreeze(Player player, string target)
+        public async Task UnFreeze(Player player, string target)
         {
             try
             {
                 var playerInfo = _realtimeHelper.GetOnlinePlayerInfo(player.Id);
                 if (playerInfo != null && playerInfo.Admin.AdminLevel > AdminLevels.None)
                 {
-                    _realtimeHelper.ExecuteActionOnPlayer(player, target, (targetPlayer, targetPlayerInfo) =>
+                    await _realtimeHelper.ExecuteActionOnPlayer(player, target, (targetPlayer, targetPlayerInfo) =>
                     {
                         if (targetPlayer.GetData<bool>("isFreezed"))
                         {
@@ -239,14 +241,14 @@ namespace NaggaServer.Controllers
         }
 
         [Command(Commands.Mute, Alias = Commands.MuteAlias, GreedyArg = true)]
-        public void Mute(Player player, string target, int minutes, string reason)
+        public async Task Mute(Player player, string target, int minutes, string reason)
         {
             try
             {
                 var playerInfo = _realtimeHelper.GetOnlinePlayerInfo(player.Id);
                 if (playerInfo != null && playerInfo.Admin.AdminLevel > AdminLevels.None)
                 {
-                    _realtimeHelper.ExecuteActionOnPlayer(player, target, (targetPlayer, targetPlayerInfo) =>
+                    await _realtimeHelper.ExecuteActionOnPlayer(player, target, (targetPlayer, targetPlayerInfo) =>
                     {
                         targetPlayerInfo.Mute.IsMuted = true;
                         targetPlayerInfo.Mute.ExpirationTime = DateTime.UtcNow.AddMinutes(minutes);
@@ -273,14 +275,14 @@ namespace NaggaServer.Controllers
         }
 
         [Command(Commands.UnMute, Alias = Commands.UnMuteAlias, GreedyArg = true)]
-        public void UnMute(Player player, string target)
+        public async Task UnMute(Player player, string target)
         {
             try
             {
                 var playerInfo = _realtimeHelper.GetOnlinePlayerInfo(player.Id);
                 if (playerInfo != null && playerInfo.Admin.AdminLevel > AdminLevels.None)
                 {
-                    _realtimeHelper.ExecuteActionOnPlayer(player, target, (targetPlayer, targetPlayerInfo) =>
+                    await _realtimeHelper.ExecuteActionOnPlayer(player, target, (targetPlayer, targetPlayerInfo) =>
                     {
                         if (targetPlayerInfo.Mute.IsMuted == true)
                         {
@@ -294,7 +296,7 @@ namespace NaggaServer.Controllers
                         }
                         else
                         {
-                            player.SendChatMessage($"Jucatorul {ChatHelper.GetChatColor(ChatColors.Orange)}{targetPlayer} {ChatHelper.GetChatColor(ChatColors.None)}nu are mute!");
+                            player.SendChatMessage($"Jucatorul {ChatColors.Orange.GetDescription()}{targetPlayer} {ChatColors.None.GetDescription()}nu are mute!");
                         }
                     });
                 }
@@ -310,14 +312,14 @@ namespace NaggaServer.Controllers
         }
 
         [Command(Commands.Goto, Alias = Commands.GotoAlias)]
-        public void Goto(Player player, string target)
+        public async Task Goto(Player player, string target)
         {
             try
             {
                 var playerInfo = _realtimeHelper.GetOnlinePlayerInfo(player.Id);
                 if (playerInfo != null && playerInfo.Admin.AdminLevel > AdminLevels.None)
                 {
-                    _realtimeHelper.ExecuteActionOnPlayer(player, target, (targetPlayer, targetPlayerInfo) =>
+                    await _realtimeHelper.ExecuteActionOnPlayer(player, target, (targetPlayer, targetPlayerInfo) =>
                     {
                         player.Position = new Vector3(targetPlayer.Position.X, targetPlayer.Position.Y, targetPlayer.Position.Z);
                         var onlineAdmins = _realtimeHelper.GetAllOnlineClientAdmins();
@@ -336,14 +338,14 @@ namespace NaggaServer.Controllers
         }
 
         [Command(Commands.Kick, Alias = Commands.KickAlias)]
-        public void Kick(Player player, string target)
+        public async Task Kick(Player player, string target)
         {
             try
             {
                 var playerInfo = _realtimeHelper.GetOnlinePlayerInfo(player.Id);
                 if (playerInfo != null && playerInfo.Admin.AdminLevel > AdminLevels.None)
                 {
-                    _realtimeHelper.ExecuteActionOnPlayer(player, target, (targetPlayer, targetPlayerInfo) =>
+                    await _realtimeHelper.ExecuteActionOnPlayer(player, target, (targetPlayer, targetPlayerInfo) =>
                     {
                         var onlineAdmins = _realtimeHelper.GetAllOnlineClientAdmins();
                         player.SendAdminCommandMessage(targetPlayer, AdminMessages.Kick, PlayerMessages.Kick, onlineAdmins);
@@ -361,7 +363,5 @@ namespace NaggaServer.Controllers
                 player.SendChatMessage(ServerMessages.CommandException);
             }
         }
-
     }
 }
-

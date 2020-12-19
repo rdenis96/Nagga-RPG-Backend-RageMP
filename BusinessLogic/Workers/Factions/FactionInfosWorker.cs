@@ -1,5 +1,4 @@
-﻿using DataLayer.Factions;
-using Domain.Models.Factions;
+﻿using Domain.Models.Factions;
 using Domain.Repositories.Factions;
 using Helper.Factions;
 using System;
@@ -9,9 +8,10 @@ namespace BusinessLogic.Workers.Factions
     public class FactionInfosWorker
     {
         private readonly IFactionInfoRepository _factionInfoRepository;
-        public FactionInfosWorker()
+
+        public FactionInfosWorker(IFactionInfoRepository factionInfoRepository)
         {
-            _factionInfoRepository = new FactionInfoRepository();
+            _factionInfoRepository = factionInfoRepository;
         }
 
         public void SetFaction(FactionInfo factionInfo, string faction)
