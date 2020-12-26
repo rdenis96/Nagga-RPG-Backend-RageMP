@@ -35,6 +35,7 @@ namespace NaggaServer.Controllers
         {
             _compositionRoot = CompositionRoot.Instance;
             _playersWorker = _compositionRoot.GetImplementation<PlayersWorker>();
+
             _realtimeHelper = RealtimeHelper.Instance;
         }
 

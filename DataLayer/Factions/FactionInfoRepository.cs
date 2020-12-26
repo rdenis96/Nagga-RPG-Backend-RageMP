@@ -1,4 +1,5 @@
-﻿using DataLayer.EntityContexts;
+﻿using DataLayer.Common;
+using DataLayer.EntityContexts;
 using Domain.Enums.Factions;
 using Domain.Models.Factions;
 using Domain.Repositories.Factions;
@@ -9,9 +10,9 @@ using System.Linq;
 
 namespace DataLayer.Factions
 {
-    public class FactionInfoRepository : IFactionInfoRepository
+    public class FactionInfoRepository : BaseRepository<FactionInfo>, IFactionInfoRepository
     {
-        public void Create(int playerId)
+        public void CreateByPlayerId(int playerId)
         {
             using (var context = new MysqlContext())
             {
@@ -20,6 +21,7 @@ namespace DataLayer.Factions
                 context.SaveChanges();
             }
         }
+
         public FactionInfo GetByMemberId(int playerId)
         {
             using (var context = new MysqlContext())
@@ -29,31 +31,21 @@ namespace DataLayer.Factions
             }
         }
 
-
-        public bool Delete(FactionInfo entity)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public IEnumerable<FactionInfo> GetAll()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public FactionInfo GetById(int id)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public FactionInfo Update(FactionInfo entity)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void Create(FactionInfo entity)
+        public override IEnumerable<FactionInfo> GetAll()
         {
             throw new NotImplementedException();
         }
+
+        public override FactionInfo GetById(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Create(FactionInfo entity)
+        {
+            throw new NotImplementedException();
+        }
+
         private FactionInfo GenerateFactionInfoForPlayer(int playerId)
         {
             var factionInfo = new FactionInfo

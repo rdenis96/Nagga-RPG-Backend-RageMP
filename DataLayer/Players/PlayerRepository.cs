@@ -1,5 +1,5 @@
-﻿using DataLayer.EntityContexts;
-using DataLayer.Factions;
+﻿using DataLayer.Common;
+using DataLayer.EntityContexts;
 using Domain.Models.Factions;
 using Domain.Models.Players;
 using Domain.Repositories.Factions;
@@ -10,13 +10,15 @@ using System.Linq;
 
 namespace DataLayer.Repositories.Players
 {
-    public class PlayerRepository : IPlayerRepository
+    public class PlayerRepository : BaseRepository<PlayerInfoWrapper>, IPlayerRepository
     {
         private readonly IFactionInfoRepository _factionInfoRepository;
-        public PlayerRepository()
+
+        public PlayerRepository(IFactionInfoRepository factionInfoRepository)
         {
-            _factionInfoRepository = new FactionInfoRepository();
+            _factionInfoRepository = factionInfoRepository;
         }
+
         public PlayerInfoWrapper GetWrapperByUsername(string username)
         {
             using (var context = new MysqlContext())
@@ -44,30 +46,19 @@ namespace DataLayer.Repositories.Players
             }
         }
 
-        public void Create(PlayerInfoWrapper entity)
+        public override void Create(PlayerInfoWrapper entity)
         {
             using (var context = new MysqlContext())
             {
                 context.PlayersInfos.Add(entity);
                 context.SaveChanges();
 
-                _factionInfoRepository.Create(entity.Id);
+                _factionInfoRepository.CreateByPlayerId(entity.Id);
                 SetCivilFactionForPlayer(entity);
             }
         }
 
-        public PlayerInfoWrapper Update(PlayerInfoWrapper entity)
-        {
-            bool changesSaved = false;
-            using (var context = new MysqlContext())
-            {
-                context.Entry(entity).State = EntityState.Modified;
-                changesSaved = context.SaveChanges() > 0;
-            }
-            return changesSaved ? entity : null;
-        }
-
-        public IEnumerable<PlayerInfoWrapper> GetAll()
+        public override IEnumerable<PlayerInfoWrapper> GetAll()
         {
             using (var context = new MysqlContext())
             {
@@ -76,19 +67,7 @@ namespace DataLayer.Repositories.Players
             }
         }
 
-        public bool Delete(PlayerInfoWrapper entity)
-        {
-            bool changesSaved = false;
-            using (var context = new MysqlContext())
-            {
-                context.Entry(entity).State = EntityState.Deleted;
-                changesSaved = context.SaveChanges() > 0;
-            }
-
-            return changesSaved;
-        }
-
-        public PlayerInfoWrapper GetById(int id)
+        public override PlayerInfoWrapper GetById(int id)
         {
             using (var context = new MysqlContext())
             {
