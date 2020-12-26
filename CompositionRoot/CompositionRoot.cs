@@ -10,49 +10,49 @@ namespace Heimdal.Backend.CompositionRoot
 {
     public class CompositionRoot
     {
-        private StandardKernel kernel;
-        private static volatile CompositionRoot instance;
-        private static object syncRoot = new object();
+        private StandardKernel _kernel;
+        private static volatile CompositionRoot _instance;
+        private static object _syncRoot = new object();
 
         public static CompositionRoot Instance
         {
             get
             {
-                if (instance == null)
+                if (_instance == null)
                 {
-                    lock (syncRoot)
+                    lock (_syncRoot)
                     {
-                        if (instance == null)
+                        if (_instance == null)
                         {
-                            instance = new CompositionRoot();
+                            _instance = new CompositionRoot();
                         }
                     }
                 }
 
-                return instance;
+                return _instance;
             }
         }
 
         public T GetImplementation<T>(string instanceName = null)
         {
-            return kernel.Get<T>(instanceName);
+            return _kernel.Get<T>(instanceName);
         }
 
         public T GetImplementation<T>()
         {
-            return kernel.Get<T>();
+            return _kernel.Get<T>();
         }
 
         public CompositionRoot()
         {
-            kernel = new StandardKernel();
+            _kernel = new StandardKernel();
 
-            kernel.Bind<IPlayerRepository>().To<PlayerRepository>();
-            kernel.Bind<PlayersWorker>().To<PlayersWorker>()
+            _kernel.Bind<IPlayerRepository>().To<PlayerRepository>();
+            _kernel.Bind<PlayersWorker>().To<PlayersWorker>()
                 .WithConstructorArgument(GetImplementation<IPlayerRepository>());
 
-            kernel.Bind<IFactionInfoRepository>().To<FactionInfoRepository>();
-            kernel.Bind<FactionInfosWorker>().To<FactionInfosWorker>()
+            _kernel.Bind<IFactionInfoRepository>().To<FactionInfoRepository>();
+            _kernel.Bind<FactionInfosWorker>().To<FactionInfosWorker>()
                 .WithConstructorArgument(GetImplementation<IFactionInfoRepository>());
         }
     }
